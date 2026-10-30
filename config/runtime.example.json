@@ -1,0 +1,20 @@
+{
+  "schema_version": "1.0",
+  "max_upload_bytes": 10485760,
+  "max_pdf_pages": 100,
+  "parse_timeout_seconds": 15,
+  "parser_memory_mib": 512,
+  "max_docx_uncompressed_bytes": 52428800,
+  "max_docx_entries": 1000,
+  "max_text_codepoints": 100000,
+  "max_ai_codepoints": 20000,
+  "data_retention_hours": 24,
+  "cleanup_interval_seconds": 300,
+  "per_user_concurrent_reviews": 1,
+  "global_concurrent_reviews": 2,
+  "uploads_per_user_per_minute": 10,
+  "reviews_per_user_per_minute": 5,
+  "idempotency_retention_hours": 24,
+  "review_poll_interval_seconds": 2,
+  "note": "Design example only; runtime loading and budget accounting pending implementation. Secrets only via environment."
+}

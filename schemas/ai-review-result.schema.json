@@ -1,0 +1,133 @@
+{
+  "$defs": {
+    "AIssue": {
+      "additionalProperties": false,
+      "properties": {
+        "issue_id": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Issue Id",
+          "type": "string"
+        },
+        "risk_type": {
+          "enum": [
+            "misleading",
+            "return_promise",
+            "disclosure",
+            "choice",
+            "privacy",
+            "other"
+          ],
+          "title": "Risk Type",
+          "type": "string"
+        },
+        "severity": {
+          "enum": [
+            "high",
+            "medium",
+            "low"
+          ],
+          "title": "Severity",
+          "type": "string"
+        },
+        "original_text": {
+          "maxLength": 10000,
+          "minLength": 1,
+          "title": "Original Text",
+          "type": "string"
+        },
+        "location": {
+          "$ref": "#/$defs/Location"
+        },
+        "reason": {
+          "maxLength": 4000,
+          "minLength": 1,
+          "title": "Reason",
+          "type": "string"
+        },
+        "regulation_ids": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 20,
+          "title": "Regulation Ids",
+          "type": "array"
+        },
+        "suggestion": {
+          "maxLength": 4000,
+          "minLength": 1,
+          "title": "Suggestion",
+          "type": "string"
+        },
+        "review_status": {
+          "const": "pending",
+          "default": "pending",
+          "title": "Review Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "issue_id",
+        "risk_type",
+        "severity",
+        "original_text",
+        "location",
+        "reason",
+        "regulation_ids",
+        "suggestion"
+      ],
+      "title": "AIssue",
+      "type": "object"
+    },
+    "Location": {
+      "additionalProperties": false,
+      "properties": {
+        "segment_id": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Segment Id",
+          "type": "string"
+        },
+        "start": {
+          "minimum": 0,
+          "title": "Start",
+          "type": "integer"
+        },
+        "end": {
+          "exclusiveMinimum": 0,
+          "title": "End",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "segment_id",
+        "start",
+        "end"
+      ],
+      "title": "Location",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "1.0",
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "issues": {
+      "items": {
+        "$ref": "#/$defs/AIssue"
+      },
+      "maxItems": 200,
+      "title": "Issues",
+      "type": "array"
+    }
+  },
+  "required": [
+    "issues"
+  ],
+  "title": "AIReviewResult",
+  "type": "object"
+}

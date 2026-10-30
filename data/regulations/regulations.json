@@ -1,1 +1,55 @@
-[]
+{
+  "schema_version": "1.0",
+  "version": "2026-10-30.1",
+  "regulations": [
+    {
+      "regulation_id": "REG-NET-10-3",
+      "regulator": "中国人民银行等八部门",
+      "name": "金融产品网络营销管理办法",
+      "document_number": "公告〔2026〕第9号",
+      "article_number": "第十条第（三）项",
+      "text": "明示或暗示资产管理产品、投资顾问或者咨询服务保本、承诺收益、限定损失金额或比例，简单依据短期、非常态的业绩比较基准或者过往业绩高低对资产管理产品、投资顾问或者咨询服务进行展示排序，预测未来业绩，或者利用模拟业绩、部分客户或者个别有利时段的表现等方式误导投资者；",
+      "published_at": "2026-04-24",
+      "effective_at": "2026-09-30",
+      "expires_at": null,
+      "source_url": "https://www.cac.gov.cn/2026-04/24/c_1778769008779432.htm",
+      "verified_at": "2026-10-30",
+      "verification_status": "verified",
+      "applicable_material_types": [
+        "marketing"
+      ],
+      "applicable_channels": [
+        "online"
+      ],
+      "scope_note": "仅条款证据样例；金融产品网络营销中资产管理产品、投资顾问或咨询服务的相关表述，具体产品及语境须人工核实。"
+    }
+  ],
+  "rules": [
+    {
+      "rule_id": "H-RETURN-001",
+      "risk_type": "return_promise",
+      "severity": "high",
+      "applicable_material_types": [
+        "marketing"
+      ],
+      "applicable_channels": [
+        "online"
+      ],
+      "detection": {
+        "operator": "contains_any",
+        "patterns": [
+          "保证收益",
+          "保本保收益"
+        ],
+        "context_note": "关键词只触发启发式提示；否定、引用、存款等语境不得直接判定违规。"
+      },
+      "explanation": "请核实是否涉及适用产品的保证性宣传",
+      "regulation_ids": [
+        "REG-NET-10-3"
+      ],
+      "basis_type": "heuristic",
+      "verification_status": "unverified",
+      "enabled": false
+    }
+  ]
+}

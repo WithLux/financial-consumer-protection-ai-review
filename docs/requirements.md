@@ -1,5 +1,5 @@
 # 金融消保智能审查工作台 — MVP需求
-版本0.1；2026-10-30；状态：产品需求与初步验收基线，尚未实现或实测。
+版本0.2；2026-10-30；状态：产品需求与初步验收基线，尚未实现或实测。
 英文名称：Financial Consumer Protection AI Review。
 独立Demo，不代表TRS软件、授权或合作。本文的功能要求为本项目设计，不属于TRS已实现能力声明。
 
@@ -14,8 +14,7 @@
 
 ## 2. 端到端业务流程
 创建任务并录入材料类别、产品、渠道、客群及背景 → 上传文件 → 校验 → 分页/段解析 → 展示解析文本及覆盖限制 → 确认适用场景 → 规则检测 → 可选模型补充 → 验证引用及原文定位 → 合并疑似问题 → 人工逐条接受/驳回/编辑/补充 → 确认审查完成 → 导出Word → 删除或按Demo策略到期清理。
-文件状态：uploaded / parsing / parsed / reviewing / awaiting_human / completed / failed。
-模型状态独立记录：disabled / pending / succeeded / failed；规则完成但模型失败必须显示“仅规则审查完成”。
+文档状态与任务状态分离；当前任务六态和转换以PRD.md为准，字段以backend/models.py为准。模型独立状态disabled/pending/succeeded/failed。
 原材料重新上传生成新版本；旧定位不得沿用。更新意见后导出新版本，旧导出不代表最新意见。
 本轮不假设后台已有正式审批或银行制度授权。
 
@@ -50,13 +49,10 @@ US06：作为维护者，我能在无DeepSeek密钥时演示规则流程，且�
 US07：作为Demo使用者，我能删除任务，其他用户不能读取我的材料。
 US08：作为维护者，我能更新法规版本而不改变历史任务所用证据快照。
 
-## 5. 初步数据与接口约束
-Task：随机ID、材料哈希/版本、产品渠道背景、解析覆盖、状态、创建/修改时间、规则库版本、模型版本与执行状态。
-Segment：稳定ID、原文、页/段/行/单元格标识、顺序；定位偏移为Python Unicode码点，前端须显式转换，不混用JS UTF-16偏移。
-Finding：问题ID、精确引文与段内半开区间[start,end)、来源、理由、依据ID、建议、原始结果、人工处理状态。
-Regulation：F06字段，历史任务保存引用快照；法规正文作为证据，不允许模型自行修改库。
-建议接口：POST /api/tasks；GET /api/tasks/{id}；POST /api/tasks/{id}/review；PATCH /api/tasks/{id}/findings/{finding_id}；POST /api/tasks/{id}/findings；POST /api/tasks/{id}/complete；GET /api/tasks/{id}/report；DELETE /api/tasks/{id}。鉴权、幂等、非法状态拒绝在实现时定义并测试。
-FastAPI同源提供静态前端和API；无React/Vue、LangChain、外部向量库。
+## 5. 数据与接口约束（2026-10-30更新）
+以PRD.md、architecture.md、api.md及backend/models.py为当前基线。文档Document与审查Review分离；问题统一Issue，原文字段original_text（替代早期quote命名）；review_status为人工决定，任务status为六态；机器核验独立location_status/reference_status。
+JSON知识库由空数组升级为KnowledgeBase对象，含schema_version/version/regulations/rules；规则引用法规，未知外键拒绝加载。当前仅一个核验条款及默认禁用启发式样例，覆盖不足须提示。
+原材料不变，复核完成后快照只读；修改重新创建review。API统一/api/documents及/api/reviews，替代旧/api/tasks建议。FastAPI同源服务静态前端和API。
 
 ## 6. 主要风险、异常与处理
 - 文件：ZIP解压炸弹、伪装格式、PDF加密/损坏/扫描；限制解析资源，明确失败，不输出“无风险”。
@@ -82,7 +78,7 @@ AC08：未知任务、无访问权限、并发版本冲突和非法状态有可�
 AC09：仓库和前端不含密钥、上传原件或SQLite；日志不记录全文；删除任务后相关API无法返回数据。
 AC10：Render HTTPS可访问并跑通“合成上传→解析→审查→人工复核→下载Word”；部署状态重启/持久化限制明确记录。
 AC11：法规库为空时明确提示“无已核验依据”，不允许伪造正常完整审查。
-以上为后续验证要求，本轮仅完成项目初始化和需求文档，尚未执行这些业务验收。
+以上为后续验证要求，目前完成项目初始化、PRD/架构/API和契约模型，尚未执行这些业务验收。
 
 ## 8. 待验证事项
 默认10MiB、单任务单文件、单一人工复核角色为Demo设计选择；后续确认长文上限、规则覆盖、数据保留期、模型预算和Render持久化方案。

@@ -1,5 +1,5 @@
 # AI审查Demo实施顺序
-2026-10-30；依据requirements.md。当前只初始化，不表示以下功能已完成。
+2026-10-30；依据requirements.md。已完成PRD/架构/API契约及模型校验；以下业务功能仍待实现。
 架构：FastAPI同源静态前端；Python解析/规则/模型/导出；本地JSON及SQLite。
 
 - [ ] 解析与定位：实现任务与segment数据结构；测试文本PDF、DOCX正文/表格、TXT、无文本及损坏文件。

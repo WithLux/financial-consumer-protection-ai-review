@@ -1,0 +1,275 @@
+{
+  "$defs": {
+    "Detection": {
+      "additionalProperties": false,
+      "properties": {
+        "operator": {
+          "const": "contains_any",
+          "title": "Operator",
+          "type": "string"
+        },
+        "patterns": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Patterns",
+          "type": "array"
+        },
+        "context_note": {
+          "title": "Context Note",
+          "type": "string"
+        }
+      },
+      "required": [
+        "operator",
+        "patterns",
+        "context_note"
+      ],
+      "title": "Detection",
+      "type": "object"
+    },
+    "Regulation": {
+      "additionalProperties": false,
+      "properties": {
+        "regulation_id": {
+          "title": "Regulation Id",
+          "type": "string"
+        },
+        "regulator": {
+          "title": "Regulator",
+          "type": "string"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "document_number": {
+          "title": "Document Number",
+          "type": "string"
+        },
+        "article_number": {
+          "title": "Article Number",
+          "type": "string"
+        },
+        "text": {
+          "title": "Text",
+          "type": "string"
+        },
+        "published_at": {
+          "format": "date",
+          "title": "Published At",
+          "type": "string"
+        },
+        "effective_at": {
+          "format": "date",
+          "title": "Effective At",
+          "type": "string"
+        },
+        "expires_at": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Expires At"
+        },
+        "source_url": {
+          "format": "uri",
+          "maxLength": 2083,
+          "minLength": 1,
+          "title": "Source Url",
+          "type": "string"
+        },
+        "verified_at": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Verified At"
+        },
+        "verification_status": {
+          "enum": [
+            "verified",
+            "unverified"
+          ],
+          "title": "Verification Status",
+          "type": "string"
+        },
+        "applicable_material_types": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Applicable Material Types",
+          "type": "array"
+        },
+        "applicable_channels": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Applicable Channels",
+          "type": "array"
+        },
+        "scope_note": {
+          "title": "Scope Note",
+          "type": "string"
+        }
+      },
+      "required": [
+        "regulation_id",
+        "regulator",
+        "name",
+        "document_number",
+        "article_number",
+        "text",
+        "published_at",
+        "effective_at",
+        "source_url",
+        "verification_status",
+        "applicable_material_types",
+        "applicable_channels",
+        "scope_note"
+      ],
+      "title": "Regulation",
+      "type": "object"
+    },
+    "Rule": {
+      "additionalProperties": false,
+      "properties": {
+        "rule_id": {
+          "title": "Rule Id",
+          "type": "string"
+        },
+        "risk_type": {
+          "enum": [
+            "misleading",
+            "return_promise",
+            "disclosure",
+            "choice",
+            "privacy",
+            "other"
+          ],
+          "title": "Risk Type",
+          "type": "string"
+        },
+        "severity": {
+          "enum": [
+            "high",
+            "medium",
+            "low"
+          ],
+          "title": "Severity",
+          "type": "string"
+        },
+        "applicable_material_types": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Applicable Material Types",
+          "type": "array"
+        },
+        "applicable_channels": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Applicable Channels",
+          "type": "array"
+        },
+        "detection": {
+          "$ref": "#/$defs/Detection"
+        },
+        "explanation": {
+          "title": "Explanation",
+          "type": "string"
+        },
+        "regulation_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Regulation Ids",
+          "type": "array"
+        },
+        "basis_type": {
+          "enum": [
+            "heuristic",
+            "regulatory_assisted"
+          ],
+          "title": "Basis Type",
+          "type": "string"
+        },
+        "verification_status": {
+          "enum": [
+            "unverified",
+            "verified"
+          ],
+          "title": "Verification Status",
+          "type": "string"
+        },
+        "enabled": {
+          "default": false,
+          "title": "Enabled",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "rule_id",
+        "risk_type",
+        "severity",
+        "applicable_material_types",
+        "applicable_channels",
+        "detection",
+        "explanation",
+        "regulation_ids",
+        "basis_type",
+        "verification_status"
+      ],
+      "title": "Rule",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "version": {
+      "title": "Version",
+      "type": "string"
+    },
+    "regulations": {
+      "items": {
+        "$ref": "#/$defs/Regulation"
+      },
+      "title": "Regulations",
+      "type": "array"
+    },
+    "rules": {
+      "items": {
+        "$ref": "#/$defs/Rule"
+      },
+      "title": "Rules",
+      "type": "array"
+    }
+  },
+  "required": [
+    "schema_version",
+    "version",
+    "regulations",
+    "rules"
+  ],
+  "title": "KnowledgeBase",
+  "type": "object"
+}
