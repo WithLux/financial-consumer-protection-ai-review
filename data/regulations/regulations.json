@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "version": "2026-10-30.1",
+  "version": "2026-10-30.2",
   "regulations": [
     {
       "regulation_id": "REG-NET-10-3",
@@ -22,34 +22,49 @@
         "online"
       ],
       "scope_note": "仅条款证据样例；金融产品网络营销中资产管理产品、投资顾问或咨询服务的相关表述，具体产品及语境须人工核实。"
-    }
-  ],
-  "rules": [
+    },
     {
-      "rule_id": "H-RETURN-001",
-      "risk_type": "return_promise",
-      "severity": "high",
+      "regulation_id": "REG-NET-8",
+      "regulator": "中国人民银行等八部门",
+      "name": "金融产品网络营销管理办法",
+      "document_number": "公告〔2026〕第9号",
+      "article_number": "第八条第一款",
+      "text": "网络营销内容应当以金融产品合同为准，涉及产品名称、产品提供者和销售者名称、产品类别、利率费率、风险提示等关键信息的，应当与金融产品合同相关条款内容保持一致，并以清晰、醒目的方式进行展示，不得有重大遗漏、刻意隐瞒或误导。",
+      "published_at": "2026-04-24",
+      "effective_at": "2026-09-30",
+      "expires_at": null,
+      "source_url": "https://www.cac.gov.cn/2026-04/24/c_1778769008779432.htm",
+      "verified_at": "2026-10-30",
+      "verification_status": "verified",
       "applicable_material_types": [
         "marketing"
       ],
       "applicable_channels": [
         "online"
       ],
-      "detection": {
-        "operator": "contains_any",
-        "patterns": [
-          "保证收益",
-          "保本保收益"
-        ],
-        "context_note": "关键词只触发启发式提示；否定、引用、存款等语境不得直接判定违规。"
-      },
-      "explanation": "请核实是否涉及适用产品的保证性宣传",
-      "regulation_ids": [
-        "REG-NET-10-3"
+      "scope_note": "仅适用金融产品网络营销；具体合同、重要性和产品情境由人工核实，不等于缺词即违规。"
+    },
+    {
+      "regulation_id": "REG-NET-10-1",
+      "regulator": "中国人民银行等八部门",
+      "name": "金融产品网络营销管理办法",
+      "document_number": "公告〔2026〕第9号",
+      "article_number": "第十条第（一）项",
+      "text": "使用虚假或者引人误解的内容；",
+      "published_at": "2026-04-24",
+      "effective_at": "2026-09-30",
+      "expires_at": null,
+      "source_url": "https://www.cac.gov.cn/2026-04/24/c_1778769008779432.htm",
+      "verified_at": "2026-10-30",
+      "verification_status": "verified",
+      "applicable_material_types": [
+        "marketing"
       ],
-      "basis_type": "heuristic",
-      "verification_status": "unverified",
-      "enabled": false
+      "applicable_channels": [
+        "online"
+      ],
+      "scope_note": "仅适用金融产品网络营销；具体合同、重要性和产品情境由人工核实，不等于缺词即违规。"
     }
-  ]
+  ],
+  "rules": []
 }

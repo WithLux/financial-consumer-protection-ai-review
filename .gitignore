@@ -35,3 +35,5 @@ temp/
 .vscode/
 # Temporary office files
 ~$*
+
+.venv*/

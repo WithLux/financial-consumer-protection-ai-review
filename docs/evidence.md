@@ -13,3 +13,5 @@
 data/regulations/regulations.json现为版本化对象，含REG-NET-10-3官方条款与一个默认禁用的未核验启发式规则。不得把本文来源索引自动视为已经配置完毕的可执行规则库。入库需保存正式名称、文号、条款、适用范围、效力与核验日期，检查草案/替代关系。C类功能要求和风险等级均为项目设计。
 
 2026-10-30新增核验：REG-NET-10-3逐字核对网信办正式文本第十条第（三）项；核验公布/施行及适用范围。H-RETURN-001关键词检测未经过业务验证，basis_type=heuristic、verification_status=unverified、enabled=false，不得作为强制法律规则。Pydantic校验参考 https://docs.pydantic.dev/latest/concepts/validators/ ，本轮仅验证本地2.11.5版本行为。
+
+B4核验记录（2026-10-30）：再次读取REG-002官方原文。regulations.json保存第八条第一款、第十条第（一）和第（三）项的实际文本，ID为REG-NET-8/REG-NET-10-1/REG-NET-10-3；适用金融产品网络营销，第（三）项还需限定资管等具体产品。rules.json中的绝对化词语、收益承诺和弱化风险告知检测均为未验证启发式规则；“未发现风险词/费用词”也只提示人工核实，不能从通用信息披露要求推导统一关键词义务。模型官方接口参考 https://api-docs.deepseek.com/api/create-chat-completion/ ，本轮读取但无真实密钥调用。

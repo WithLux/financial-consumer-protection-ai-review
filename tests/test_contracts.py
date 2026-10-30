@@ -18,7 +18,8 @@ def candidate(**changes):
 
 class ContractTests(unittest.TestCase):
     def setUp(self):
-        self.kb = KnowledgeBase.model_validate_json(Path('data/regulations/regulations.json').read_text())
+        from backend.regulation_service import load_library
+        self.kb = load_library()
 
     def test_verified_quote_and_reference(self):
         result = validate_issue(AIssue(**candidate()), {'s1': '产品保证收益'}, self.kb, date(2026,10,30), 'marketing', 'online')

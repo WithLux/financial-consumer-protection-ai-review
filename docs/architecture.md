@@ -35,3 +35,6 @@ render.yaml暂不提供可执行部署入口：main.py尚未实现。config/runt
 
 ## 6. 验证边界
 已测试纯契约：未知引用、引用日期/渠道、错引文、Unicode、重复ID、人工决定限制、状态允许边和完成门槛。未测试HTTP、鉴权、资源隔离、AI真实请求、解析库、SQLite并发、Word和Render；不得把Schema测试当端到端成功。
+
+## B4实施状态更新
+main/document_parser/rule_engine/ai_service/regulation_service/storage/reports已实现；模型继续复用models.py。本文早期规划与实际差异（BackgroundTasks、重启失败语义、404、无文书缓存、单次AI调用、资源限制平台差异）详见backend-validation.md；不得将原规划全部视为已实现。

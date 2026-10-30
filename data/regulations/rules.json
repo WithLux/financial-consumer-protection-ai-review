@@ -1,0 +1,97 @@
+[
+  {
+    "rule_id": "H-RETURN-001",
+    "risk_type": "return_promise",
+    "severity": "high",
+    "applicable_material_types": [
+      "marketing",
+      "product_intro",
+      "notice"
+    ],
+    "applicable_channels": [
+      "online",
+      "offline",
+      "unknown"
+    ],
+    "detection": {
+      "operator": "contains_any",
+      "patterns": [
+        "保证收益",
+        "保本保收益",
+        "稳赚不赔",
+        "收益一定达到"
+      ],
+      "context_note": "关键词仅触发疑似问题；否定、反面示例、引述和材料整体语境须人工复核"
+    },
+    "explanation": "检测到可能的收益保证表述",
+    "regulation_ids": [
+      "REG-NET-10-3"
+    ],
+    "basis_type": "heuristic",
+    "verification_status": "unverified",
+    "enabled": true
+  },
+  {
+    "rule_id": "H-ABSOLUTE-001",
+    "risk_type": "misleading",
+    "severity": "medium",
+    "applicable_material_types": [
+      "marketing",
+      "product_intro",
+      "notice"
+    ],
+    "applicable_channels": [
+      "online",
+      "offline",
+      "unknown"
+    ],
+    "detection": {
+      "operator": "contains_any",
+      "patterns": [
+        "绝对安全",
+        "零风险",
+        "百分百安全",
+        "最安全",
+        "全网第一"
+      ],
+      "context_note": "关键词仅触发疑似问题；否定、反面示例、引述和材料整体语境须人工复核"
+    },
+    "explanation": "检测到可能的绝对化表述；该条法律并不等于禁止一切绝对词语",
+    "regulation_ids": [
+      "REG-NET-10-1"
+    ],
+    "basis_type": "heuristic",
+    "verification_status": "unverified",
+    "enabled": true
+  },
+  {
+    "rule_id": "H-RISK-001",
+    "risk_type": "disclosure",
+    "severity": "medium",
+    "applicable_material_types": [
+      "marketing",
+      "product_intro",
+      "notice"
+    ],
+    "applicable_channels": [
+      "online",
+      "offline",
+      "unknown"
+    ],
+    "detection": {
+      "operator": "contains_any",
+      "patterns": [
+        "无需阅读风险提示",
+        "不用了解风险"
+      ],
+      "context_note": "关键词仅触发疑似问题；否定、反面示例、引述和材料整体语境须人工复核"
+    },
+    "explanation": "检测到可能弱化风险告知的表述",
+    "regulation_ids": [
+      "REG-NET-8"
+    ],
+    "basis_type": "heuristic",
+    "verification_status": "unverified",
+    "enabled": true
+  }
+]

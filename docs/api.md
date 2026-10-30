@@ -1,6 +1,6 @@
 # API契约 v1.0
-2026-10-30；设计状态，尚无HTTP路由实现。与backend/models.py及PRD.md同版本。
-所有API以/api为前缀，JSON UTF-8；上传multipart，下载DOCX。/api/health匿名，其余鉴权；写操作需Origin/CSRF检查（见architecture.md）。资源不存在或不属于会话统一404，到期且属于本人410。请求禁止owner_id、API密钥、模型名、任意文件路径。
+2026-10-30；HTTP路由已实现；B4实际范围与差异见backend-validation.md。与backend/models.py及PRD.md同版本。
+所有API以/api为前缀，JSON UTF-8；上传multipart，下载DOCX。/api/health匿名，其余鉴权；写操作需Origin/CSRF检查（见architecture.md）。资源不存在或不属于会话统一404，到期/删除统一404（当前实现）。请求禁止owner_id、API密钥、模型名、任意文件路径。
 错误统一形状：{"error":{"code":"version_conflict","message":"任务已更新，请刷新","request_id":"随机追踪ID","details":{}}}。details不得含材料全文、密钥、堆栈。常用400/401/403/404/409/410/413/415/422/429/503。
 
 ## POST /api/documents/upload
@@ -48,8 +48,10 @@ GET /api/documents：本人未过期材料列表，分页默认20/最大100，�
 DELETE /api/documents/{document_id}：204，删除关联任务和文件；运行中任务取消，按墓碑防止写回。
 DELETE /api/reviews/{review_id}：204，仅删任务/意见/文书，共享document保留到期；本人已删请求可幂等204，未知或他人404。
 POST /api/session：{access_token}校验Demo入口，发HttpOnly Secure SameSite=Strict cookie和CSRF token；限流且不记录密码，失败401。DELETE /api/session：注销会话cookie（资源仍按TTL清理）。
-这些是为人工补充、材料管理、删除和隔离补齐的必要设计，均尚未实现。
+以上补充接口均已实现；列表暂未分页，删除重复请求返回404，详细限制见backend-validation.md。
 
 ## 枚举与定位约定
 任务pending/running/pending_review/reviewed/issued/failed；人工pending/accepted/rejected/edited/added；risk_type=misleading/return_promise/disclosure/choice/privacy/other；severity=high/medium/low。文本半开区间[start,end)以Unicode码点计数，不是JS UTF-16。location={segment_id,start,end}；定位状态和引用状态各为verified/needs_verification；AI结果不允许携带这些服务端字段。
 AIReviewResult={schema_version:"1.0",issues:[AIssue]}，AIssue.review_status只能pending；形状错误重试至多1次，仍错误ai_status=failed并规则降级。候选最多200；未知字段拒绝。模型输出不能包含最终意见书、官方链接或自动法律认定。
+
+B4配置/行为：单次模型调用，无自动重试；失败通过execution.ai_failure_code与coverage.warnings公开，规则结果保持真实。实际后台任务使用BackgroundTasks；进程重启pending/running中断标failed；文书按锁定快照重新生成而不缓存文件。正文早期的独立410、删除重复204、生成文件缓存/重试一次为原设计，当前以本段与backend-validation.md明确的实施差异为准。
