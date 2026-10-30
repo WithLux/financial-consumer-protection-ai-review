@@ -15,6 +15,7 @@ from fastapi.staticfiles import StaticFiles
 from starlette.datastructures import UploadFile
 from .config import Settings, ROOT
 from .storage import Store
+from .security import RequestBounds
 from .document_parser import parse_document, ParseError
 from .regulation_service import load_library, candidates
 from .rule_engine import detect, deduplicate
@@ -59,6 +60,7 @@ def create_app(settings=None):
             except asyncio.CancelledError:pass
             store.db.close()
     app=FastAPI(title='智能消保审查平台',lifespan=lifespan)
+    app.add_middleware(RequestBounds)
     app.state.store=store;app.state.settings=cfg
     parser_slots=asyncio.Semaphore(2)
     @app.exception_handler(APIError)
@@ -288,7 +290,7 @@ def create_app(settings=None):
 
     @app.get('/api/reviews/{review_id}/report')
     async def report(review_id:str,req:Request,draft:bool=False):
-        owner=auth(req);r=require(review_id,'review',owner)
+        owner=auth(req);limit('report:'+owner,10);r=require(review_id,'review',owner)
         if (draft and r['status']!='pending_review') or (not draft and r['status'] not in ['reviewed','issued']):raise APIError(409,'invalid_state','当前状态不能生成此意见书')
         from .reports import build_report
         if not draft and not r.get('finalized_snapshot'):raise APIError(409,'snapshot_required','旧任务缺少人工确认快照，请重新创建并复核')

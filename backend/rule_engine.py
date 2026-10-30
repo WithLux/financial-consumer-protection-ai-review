@@ -19,7 +19,11 @@ def detect(segments,kb,context):
                     start=s['text'].find(word,offset)
                     if start<0:break
                     offset=start+len(word)
-                    i=AIssue(issue_id=str(uuid4()),risk_type=rule.risk_type,severity=rule.severity,original_text=word,location={'segment_id':s['segment_id'],'start':start,'end':offset},reason=rule.explanation+'；'+rule.detection.context_note,regulation_ids=rule.regulation_ids,suggestion='请结合产品合同及适用范围核实，删除或修正不准确表述并完善必要提示。')
+                    prefix=s['text'][max(0,start-24):start]
+                    contextual=any(marker in prefix for marker in ['不得','禁止','不能','不应','反面示例','错误示例','不可'])
+                    explanation=rule.explanation+'；'+rule.detection.context_note
+                    if contextual:explanation='上下文包含否定或反面示例线索，本项降为低优先级待人工判断；'+explanation
+                    i=AIssue(issue_id=str(uuid4()),risk_type=rule.risk_type,severity='low' if contextual else rule.severity,original_text=word,location={'segment_id':s['segment_id'],'start':start,'end':offset},reason=explanation,regulation_ids=rule.regulation_ids,suggestion='请结合产品合同及适用范围核实，删除或修正不准确表述并完善必要提示。')
                     checked=validate_issue(i,mapping,evidence,date.today(),context.material_type,context.channel)
                     checked.source='rule';issues.append(checked)
                     if len(issues)>=200:return issues

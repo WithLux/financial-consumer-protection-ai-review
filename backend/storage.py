@@ -11,6 +11,7 @@ class Store:
         self.lock=threading.RLock()
         self.db=sqlite3.connect(path,check_same_thread=False)
         self.db.execute('PRAGMA journal_mode=WAL')
+        self.db.execute('PRAGMA secure_delete=ON')
         self.db.execute('CREATE TABLE IF NOT EXISTS resources (id TEXT PRIMARY KEY,kind TEXT,owner TEXT,expires REAL,payload TEXT)')
         self.db.execute('CREATE TABLE IF NOT EXISTS budget (day TEXT PRIMARY KEY,tokens INTEGER)')
         self.db.commit()
@@ -28,6 +29,7 @@ class Store:
 
     def cleanup(self):
         with self.atomic():self.db.execute('DELETE FROM resources WHERE expires <= ?', (time.time(),))
+        with self.lock:self.db.execute('PRAGMA wal_checkpoint(TRUNCATE)')
 
     def put(self,id,kind,owner,obj,expires):
         with self.atomic():self.db.execute('INSERT INTO resources VALUES (?,?,?,?,?)',(id,kind,owner,expires,json.dumps(obj,ensure_ascii=False)))
@@ -46,6 +48,7 @@ class Store:
 
     def delete(self,id,owner):
         with self.atomic():self.db.execute('DELETE FROM resources WHERE id=? AND owner=?',(id,owner))
+        with self.lock:self.db.execute('PRAGMA wal_checkpoint(TRUNCATE)')
 
     def reserve(self,tokens,limit):
         with self.atomic():

@@ -62,3 +62,6 @@ POST /api/reviews/{review_id}/retry接收{expected_version}及独立Idempotency-
 GET /api/session恢复原短期会话及CSRF，权限/过期仍由服务端控制。
 最终确认额外要求report_fields完整；返回固定版本并持久化finalized_snapshot。正式Word只含accepted/edited/added，不列驳回项；original_issues和带时间的before/after审计在隔离GET review中可查。原报告条款中“审计摘要”不再包括驳回内容明细。
 完整数据语义与统计口径见review-closure.md；report-fields.schema.json由Pydantic生成。
+
+## QA补充约束（2026-10-30）
+非上传POST/PATCH/PUT请求体最多1MiB（含无Content-Length分块流），超限413 request_too_large；API按传输peer每分钟120次，超限429 rate_limited；Word生成按会话每分钟10次，超限429。上传保留10MiB独立限制。API响应Cache-Control:no-store。限频为单进程内存实现，代理下共享peer行为需部署验证。

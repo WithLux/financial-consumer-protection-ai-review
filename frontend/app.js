@@ -54,7 +54,7 @@ function saveReportDialog(){
 }
 function rememberReview(){if(mode==='real')try{globalThis.sessionStorage?.setItem('consumer-review-current',review.review_id);}catch{}}
 async function restoreReal(){const token=epoch,client=api;try{
- await client.resume();const id=globalThis.sessionStorage?.getItem('consumer-review-current');
+ const id=globalThis.sessionStorage?.getItem('consumer-review-current');if(!id)return;await client.resume();
  if(!id||token!==epoch)return;const restored=await client.get(id);if(token!==epoch)return;
  review=restored;doc={document_id:review.document_id,filename:review.filename,segments:review.segments,coverage:review.coverage};$('file-info').textContent=review.filename+' · 从隔离会话恢复';render();
  if(['pending','running'].includes(review.status))poll(token);
