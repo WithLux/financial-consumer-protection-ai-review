@@ -1,0 +1,9 @@
+{
+  "name": "financial-consumer-protection-ai-review",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "test:frontend": "node tests/frontend-contracts.mjs && node tests/frontend-api.mjs && node tests/frontend-ui.mjs"
+  }
+}

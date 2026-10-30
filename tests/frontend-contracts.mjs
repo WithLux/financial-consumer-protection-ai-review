@@ -1,0 +1,17 @@
+import assert from 'node:assert/strict';
+import {MockAPI} from '../frontend/mock.js';
+const api=new MockAPI();
+const doc=await api.upload(new File(['产品保证收益，敬请阅读风险提示。'],'demo.txt'));
+assert.equal(doc.segments[0].text,'产品保证收益，敬请阅读风险提示。');
+let task=await api.create({document_id:doc.document_id,scenario:'normal',use_ai:false,material_type:'marketing',channel:'online',product_type:'理财'});
+let review=await api.get(task.review_id); while(['pending','running'].includes(review.status)) review=await api.get(task.review_id);
+assert.equal(review.status,'pending_review'); assert.equal(review.issues.length,1);
+await assert.rejects(()=>api.finalize(review.review_id,{expected_version:review.version,coverage_confirmed:true,limitations_acknowledged:true}));
+const issue=review.issues[0]; await api.patch(review.review_id,issue.issue_id,{expected_version:review.version,review_status:'accepted',decision_reason:'已核实'});
+review=await api.get(review.review_id);
+await assert.rejects(()=>api.patch(review.review_id,issue.issue_id,{expected_version:1,review_status:'rejected',decision_reason:'错误版本'}));
+await api.finalize(review.review_id,{expected_version:review.version,coverage_confirmed:true,limitations_acknowledged:true});
+const report=await api.report(review.review_id,false); assert.equal(report.blob.type,'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+assert.equal(new Uint8Array(await report.blob.arrayBuffer())[0],0x50);
+assert.equal((await api.get(review.review_id)).status,'issued');
+console.log('Frontend mock workflow contracts passed');

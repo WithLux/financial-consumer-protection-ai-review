@@ -1,0 +1,16 @@
+import assert from 'node:assert/strict';
+import {RealAPI} from '../frontend/api.js';
+const calls=[];let fail=false;
+globalThis.fetch=async(url,options)=>{calls.push({url,options});if(fail)throw new TypeError('network');return new Response(JSON.stringify(url.endsWith('/session')?{csrf_token:'test-csrf'}:{review_id:'r',status:'pending',version:1}),{status:200,headers:{'content-type':'application/json'}});};
+const api=new RealAPI();await api.login('demo-password');
+const body={document_id:'d',material_type:'marketing',channel:'online',product_type:'理财',audience:'个人',use_ai:false,external_processing_authorized:false,scenario:'normal'};
+await api.create(body);await api.create(body);
+assert.equal(calls[1].url,'/api/reviews');assert.equal(calls[1].options.credentials,'same-origin');
+assert.equal(calls[1].options.headers['X-CSRF-Token'],'test-csrf');
+assert.equal(calls[1].options.headers['Idempotency-Key'],calls[2].options.headers['Idempotency-Key']);
+assert.equal(JSON.parse(calls[1].options.body).scenario,undefined);
+await api.patch('r','i',{expected_version:1,review_status:'accepted',decision_reason:'核实'});
+assert.equal(calls.at(-1).url,'/api/reviews/r/issues/i');assert.equal(calls.at(-1).options.method,'PATCH');
+await assert.rejects(()=>api.report('r',false),/Word/);fail=true;
+await assert.rejects(()=>api.get('r'),/不会自动切换为Mock/);
+console.log('Real API adapter contracts passed');
