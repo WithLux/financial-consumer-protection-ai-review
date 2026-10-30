@@ -76,6 +76,9 @@ class BackendTests(unittest.TestCase):
         for issue in r['issues']:
             result=self.client.patch(f"/api/reviews/{r['review_id']}/issues/{issue['issue_id']}",json={'expected_version':r['version'],'review_status':'rejected','decision_reason':'测试反面材料'},headers=self.headers)
             self.assertEqual(result.status_code,200,result.text);r['version']=result.json()['version']
+        fields=dict(applicant_department='测试部门',reviewer='测试人员',review_date='2026-10-30',review_scope='合成材料文本',final_conclusion='人工核实未采纳候选问题',remediation_notes='继续按业务流程核对')
+        saved=self.client.patch(f"/api/reviews/{r['review_id']}/report-fields",json={'expected_version':r['version'],'fields':fields},headers=self.headers)
+        self.assertEqual(saved.status_code,200,saved.text);r['version']=saved.json()['version']
         end=self.client.post(f"/api/reviews/{r['review_id']}/finalize",json={'expected_version':r['version'],'coverage_confirmed':True,'limitations_acknowledged':True},headers=self.headers)
         self.assertEqual(end.status_code,200,end.text)
         report=self.client.get(f"/api/reviews/{r['review_id']}/report?draft=false")

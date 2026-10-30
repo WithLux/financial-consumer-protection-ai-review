@@ -241,3 +241,21 @@ def can_finalize(issues: list[Issue], *, coverage_confirmed: bool,
                                                    or issue.reference_status != 'verified'):
             return False
     return True
+
+
+class ReportFields(Contract):
+    applicant_department: str = Field(min_length=1, max_length=200, pattern=r'\S')
+    reviewer: str = Field(min_length=1, max_length=100, pattern=r'\S')
+    review_date: date
+    review_scope: str = Field(min_length=1, max_length=2000, pattern=r'\S')
+    final_conclusion: str = Field(min_length=1, max_length=4000, pattern=r'\S')
+    remediation_notes: str = Field(min_length=1, max_length=4000, pattern=r'\S')
+
+
+class ReportFieldsPatch(Contract):
+    expected_version: int = Field(ge=1, strict=True)
+    fields: ReportFields
+
+
+class RetryRequest(Contract):
+    expected_version: int = Field(ge=1, strict=True)

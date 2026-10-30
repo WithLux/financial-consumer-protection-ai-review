@@ -10,6 +10,7 @@ await assert.rejects(()=>api.finalize(review.review_id,{expected_version:review.
 const issue=review.issues[0]; await api.patch(review.review_id,issue.issue_id,{expected_version:review.version,review_status:'accepted',decision_reason:'已核实'});
 review=await api.get(review.review_id);
 await assert.rejects(()=>api.patch(review.review_id,issue.issue_id,{expected_version:1,review_status:'rejected',decision_reason:'错误版本'}));
+await api.saveReport(review.review_id,{expected_version:review.version,fields:{applicant_department:'测试部门',reviewer:'测试人员',review_date:'2026-10-30',review_scope:'合成材料',final_conclusion:'经人工核实需修改',remediation_notes:'逐项整改'}});review=await api.get(review.review_id);
 await api.finalize(review.review_id,{expected_version:review.version,coverage_confirmed:true,limitations_acknowledged:true});
 const report=await api.report(review.review_id,false); assert.equal(report.blob.type,'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
 assert.equal(new Uint8Array(await report.blob.arrayBuffer())[0],0x50);

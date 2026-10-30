@@ -55,3 +55,10 @@ POST /api/session：{access_token}校验Demo入口，发HttpOnly Secure SameSite
 AIReviewResult={schema_version:"1.0",issues:[AIssue]}，AIssue.review_status只能pending；形状错误重试至多1次，仍错误ai_status=failed并规则降级。候选最多200；未知字段拒绝。模型输出不能包含最终意见书、官方链接或自动法律认定。
 
 B4配置/行为：单次模型调用，无自动重试；失败通过execution.ai_failure_code与coverage.warnings公开，规则结果保持真实。实际后台任务使用BackgroundTasks；进程重启pending/running中断标failed；文书按锁定快照重新生成而不缓存文件。正文早期的独立410、删除重复204、生成文件缓存/重试一次为原设计，当前以本段与backend-validation.md明确的实施差异为准。
+
+## 人工复核闭环增量（2026-10-30，已实现）
+PATCH /api/reviews/{review_id}/report-fields接收ReportFieldsPatch；fields必须完整包含申请部门、审查人员、日期、范围、人工最终结论、整改建议。返回report_fields和新version，仅待复核可保存。
+POST /api/reviews/{review_id}/retry接收{expected_version}及独立Idempotency-Key，仅失败任务可创建新任务（202），旧记录不变，返回新任务对应retry_of。
+GET /api/session恢复原短期会话及CSRF，权限/过期仍由服务端控制。
+最终确认额外要求report_fields完整；返回固定版本并持久化finalized_snapshot。正式Word只含accepted/edited/added，不列驳回项；original_issues和带时间的before/after审计在隔离GET review中可查。原报告条款中“审计摘要”不再包括驳回内容明细。
+完整数据语义与统计口径见review-closure.md；report-fields.schema.json由Pydantic生成。

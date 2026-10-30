@@ -1,0 +1,76 @@
+{
+  "$defs": {
+    "ReportFields": {
+      "additionalProperties": false,
+      "properties": {
+        "applicant_department": {
+          "maxLength": 200,
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Applicant Department",
+          "type": "string"
+        },
+        "reviewer": {
+          "maxLength": 100,
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Reviewer",
+          "type": "string"
+        },
+        "review_date": {
+          "format": "date",
+          "title": "Review Date",
+          "type": "string"
+        },
+        "review_scope": {
+          "maxLength": 2000,
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Review Scope",
+          "type": "string"
+        },
+        "final_conclusion": {
+          "maxLength": 4000,
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Final Conclusion",
+          "type": "string"
+        },
+        "remediation_notes": {
+          "maxLength": 4000,
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Remediation Notes",
+          "type": "string"
+        }
+      },
+      "required": [
+        "applicant_department",
+        "reviewer",
+        "review_date",
+        "review_scope",
+        "final_conclusion",
+        "remediation_notes"
+      ],
+      "title": "ReportFields",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "expected_version": {
+      "minimum": 1,
+      "title": "Expected Version",
+      "type": "integer"
+    },
+    "fields": {
+      "$ref": "#/$defs/ReportFields"
+    }
+  },
+  "required": [
+    "expected_version",
+    "fields"
+  ],
+  "title": "ReportFieldsPatch",
+  "type": "object"
+}

@@ -20,7 +20,7 @@ from .regulation_service import load_library, candidates
 from .rule_engine import detect, deduplicate
 from .ai_service import AIService, AIError
 from .models import (ReviewCreate, IssuePatch, FinalizeRequest, AIssue, Issue,
-                     KnowledgeBase, Contract, can_finalize, validate_issue)
+                     KnowledgeBase, Contract, can_finalize, validate_issue, ReportFields, ReportFieldsPatch, RetryRequest)
 from pydantic import Field
 
 class APIError(Exception):
@@ -178,6 +178,7 @@ def create_app(settings=None):
             merged=deduplicate(results)
             if len(merged)>=200:r['coverage']['warnings'].append('最多展示200条候选问题，其余未完整覆盖，请缩小送审范围')
             r['issues']=[i.model_dump(mode='json') for i in merged[:200]]
+            r['original_issues']=json.loads(json.dumps(r['issues']))
             r['status']='pending_review';r['version']+=1
             r['coverage']['warnings'].append('当前规则只作启发式初筛，不能证明全文合规；未覆盖语义及事实需人工审查')
             event(r,'analysis_completed',owner)
@@ -202,15 +203,18 @@ def create_app(settings=None):
         if active>=2:raise APIError(503,'queue_full','审查队列繁忙，请稍后重试')
         if any(r['status'] in ['pending','running'] for r in store.list('review',owner)):raise APIError(409,'review_active','已有审查任务正在执行')
         evidence=candidates(kb,body)
-        r={'review_id':str(uuid4()),'document_id':body.document_id,'filename':doc['filename'],'sha256':doc['sha256'],'segments':doc['segments'],'coverage':json.loads(json.dumps(doc['coverage'])),'context':body.model_dump(),'status':'pending','version':1,'issues':[],'regulations':{i.regulation_id:i.model_dump(mode='json') for i in evidence.regulations},'evidence':evidence.model_dump(mode='json'),'library_version':kb.version,'review_date':date.today().isoformat(),'execution':{'rules_status':'not_started','ai_status':'pending' if body.use_ai else 'disabled','ai_failure_code':None},'events':[],'created_at':now(),'expires_at':doc['expires_at'],'finalized_version':None,'report_id':None}
+        r={'review_id':str(uuid4()),'document_id':body.document_id,'filename':doc['filename'],'sha256':doc['sha256'],'segments':doc['segments'],'coverage':json.loads(json.dumps(doc['coverage'])),'context':body.model_dump(),'status':'pending','version':1,'issues':[],'original_issues':[],'report_fields':None,'finalized_snapshot':None,'regulations':{i.regulation_id:i.model_dump(mode='json') for i in evidence.regulations},'evidence':evidence.model_dump(mode='json'),'library_version':kb.version,'review_date':date.today().isoformat(),'execution':{'rules_status':'not_started','ai_status':'pending' if body.use_ai else 'disabled','ai_failure_code':None},'events':[],'created_at':now(),'expires_at':doc['expires_at'],'finalized_version':None,'report_id':None}
         store.put(r['review_id'],'review',owner,r,r['expires_at']);store.put(idemid,'idempotency',owner,{'hash':request_hash,'review_id':r['review_id']},r['expires_at'])
         background.add_task(execute,r['review_id'],owner)
         return {'review_id':r['review_id'],'status':'pending','version':1}
 
     @app.get('/api/reviews/{review_id}')
     async def get_review(review_id:str,req:Request):
-        r=require(review_id,'review',auth(req));r.pop('evidence',None)
-        r['summary']={'total':len(r['issues']),**{s:sum(i['review_status']==s for i in r['issues']) for s in ['pending','accepted','rejected','edited','added']},'unverified':sum(i['reference_status']!='verified' or i['location_status']!='verified' for i in r['issues'])}
+        r=require(review_id,'review',auth(req));r.pop('evidence',None);r.pop('finalized_snapshot',None)
+        r['summary']={'total':len(r['issues']),**{s:sum(i['review_status']==s for i in r['issues']) for s in ['pending','accepted','rejected','edited','added']},'unverified':sum(i['reference_status']!='verified' or i['location_status']!='verified' for i in r['issues']),
+                      'severity':{s:sum(i['severity']==s for i in r['issues']) for s in ['high','medium','low']},
+                      'manual_added':sum(i['source']=='manual' for i in r['issues']),
+                      'formal_total':sum(i['review_status'] in ['accepted','edited','added'] for i in r['issues'])}
         return r
 
     def editable(r,version):
@@ -239,15 +243,47 @@ def create_app(settings=None):
         try:candidate=AIssue(**body.issue,issue_id=str(uuid4()))
         except Exception:raise APIError(422,'invalid_issue','问题字段无效') from None
         result=checked(candidate,r,'manual');result.review_status='added';result.decision_reason=body.decision_reason
-        obj=result.model_dump(mode='json');r['issues'].append(obj);event(r,'issue_added',owner);r['version']+=1;store.save(review_id,r);return {'issue':obj,'version':r['version']}
+        obj=result.model_dump(mode='json');r['issues'].append(obj);event(r,'issue_added',owner);r['events'][-1]['after']=json.loads(json.dumps(obj));r['version']+=1;store.save(review_id,r);return {'issue':obj,'version':r['version']}
+
+    @app.get('/api/session')
+    async def resume_session(req:Request):
+        auth(req)
+        session=store.get(digest(req.cookies.get('session','')),'session','session')
+        return {'csrf_token':session['csrf']}
+
+    @app.patch('/api/reviews/{review_id}/report-fields')
+    async def save_report_fields(review_id:str,body:ReportFieldsPatch,req:Request):
+        owner=auth(req,True);r=require(review_id,'review',owner);editable(r,body.expected_version)
+        before=r.get('report_fields');r['report_fields']=body.fields.model_dump(mode='json')
+        event(r,'report_fields_saved',owner);r['events'][-1].update(before=before,after=r['report_fields'].copy())
+        r['version']+=1;store.save(review_id,r)
+        return {'report_fields':r['report_fields'],'version':r['version']}
+
+    @app.post('/api/reviews/{review_id}/retry',status_code=202)
+    async def retry_review(review_id:str,body:RetryRequest,req:Request,background:BackgroundTasks):
+        owner=auth(req,True);r=require(review_id,'review',owner)
+        if r['status']!='failed' or r['version']!=body.expected_version:
+            raise APIError(409,'retry_conflict','仅可重试当前版本的失败任务')
+        # New task and new quota reservation; preserve the previous failure audit.
+        result=await create(ReviewCreate.model_validate(r['context']),req,background)
+        if result['review_id']==review_id:raise APIError(409,'retry_key_reused','重试请使用独立幂等键')
+        new=require(result['review_id'],'review',owner)
+        if not new.get('retry_of'):
+            new['retry_of']=review_id;event(new,'retry_created',owner);store.save(new['review_id'],new)
+        return result
 
     @app.post('/api/reviews/{review_id}/finalize')
     async def finalize(review_id:str,body:FinalizeRequest,req:Request):
         owner=auth(req,True);r=require(review_id,'review',owner)
         if r['status'] in ['reviewed','issued'] and body.expected_version==r['finalized_version']:return {'review_id':review_id,'status':r['status'],'version':r['version'],'finalized_version':r['finalized_version']}
         editable(r,body.expected_version)
+        if not r.get('report_fields'):raise APIError(409,'report_fields_required','请先填写并保存申请部门、审查人员及整体审查意见')
+        ReportFields.model_validate(r['report_fields'])
         if not can_finalize([Issue.model_validate(i) for i in r['issues']],coverage_confirmed=body.coverage_confirmed,limitations_acknowledged=body.limitations_acknowledged):raise APIError(409,'unresolved_issues','请完成全部复核并修正或驳回待核实问题')
-        r['status']='reviewed';r['version']+=1;r['finalized_version']=r['version'];event(r,'finalized',owner);store.save(review_id,r)
+        r['status']='reviewed';r['version']+=1;r['finalized_version']=r['version'];event(r,'finalized',owner)
+        snapshot_keys=['review_id','filename','context','sha256','library_version','execution','coverage','issues','regulations','report_fields','review_date','version','finalized_version']
+        r['finalized_snapshot']={k:json.loads(json.dumps(r[k])) for k in snapshot_keys}
+        store.save(review_id,r)
         return {'review_id':review_id,'status':r['status'],'version':r['version'],'finalized_version':r['finalized_version']}
 
     @app.get('/api/reviews/{review_id}/report')
@@ -255,7 +291,8 @@ def create_app(settings=None):
         owner=auth(req);r=require(review_id,'review',owner)
         if (draft and r['status']!='pending_review') or (not draft and r['status'] not in ['reviewed','issued']):raise APIError(409,'invalid_state','当前状态不能生成此意见书')
         from .reports import build_report
-        try:data=await asyncio.to_thread(build_report,r,draft)
+        if not draft and not r.get('finalized_snapshot'):raise APIError(409,'snapshot_required','旧任务缺少人工确认快照，请重新创建并复核')
+        try:data=await asyncio.to_thread(build_report,r if draft else r['finalized_snapshot'],draft)
         except Exception:raise APIError(503,'report_failed','文书生成失败，请重试') from None
         # Recheck owner/expiry/deletion after document generation.
         latest=require(review_id,'review',owner)
